@@ -19,10 +19,6 @@ async function loadTasks() {
   tasks = base.concat(saved);
 }
 
-function weatherText(w) {
-  return w ? w.tempMax + '℃ · ' + w.windMax + 'm/s · ' + w.rainProb + '%' : '-';
-}
-
 function renderTasks() {
   const body = document.getElementById('taskList');
   body.innerHTML = '';
@@ -71,10 +67,19 @@ function addTask(e) {
 
 // 제목 아래에 오늘 날짜(YYYY-MM-DD) 표시
 function showToday() {
-  const d = new Date();
-  const pad = (n) => String(n).padStart(2, '0');
-  document.getElementById('todayDate').textContent =
-    d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+  document.getElementById('todayDate').textContent = formatDate(new Date());
+}
+
+// 04 단원 : 지금 표를 md 파일(현장일정_판단_YYYY-MM-DD.md)로 내려받기
+function saveJudgeMd() {
+  const dateStr = formatDate(new Date());
+  const md = buildJudgeMarkdown(tasks, weatherByRegion, dateStr);
+  const blob = new Blob([md], { type: 'text/markdown;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = '현장일정_판단_' + dateStr + '.md';
+  a.click();
+  URL.revokeObjectURL(a.href);
 }
 
 // 03 단원 : Open-Meteo 에서 지역별 오늘 날씨를 받아 표를 다시 그림 (실패해도 목록은 그대로)
@@ -99,6 +104,7 @@ async function loadWeather() {
 }
 
 document.getElementById('taskForm').addEventListener('submit', addTask);
+document.getElementById('saveMdBtn').addEventListener('click', saveJudgeMd);
 showToday();
 loadTasks().then(() => {
   renderTasks();
