@@ -59,6 +59,15 @@ function addTask(e) {
   renderTasks();
 }
 
+// 제목 아래에 오늘 날짜(YYYY-MM-DD) 표시
+function showToday() {
+  const d = new Date();
+  const pad = (n) => String(n).padStart(2, '0');
+  document.getElementById('todayDate').textContent =
+    d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+}
+
 document.getElementById('taskForm').addEventListener('submit', addTask);
+showToday();
 loadTasks();
 renderTasks();
