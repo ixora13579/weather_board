@@ -2,10 +2,15 @@
 
 오늘 현장 일정과 지역별 날씨를 한 화면에서 보고, 날씨 때문에 주의 · 중지를 검토할 일정을 표시합니다. (교육용 가상 데이터)
 
+## 처음 준비 (Supabase, 한 번만)
+1. supabase.com 에서 프로젝트 만들기
+2. SQL Editor 에 `setup.sql` 내용을 붙여 넣고 Run → 표 `wx_tasks` 와 가상 일정 6건이 생김
+3. Project Settings → API Keys 에서 프로젝트 주소와 **publishable(또는 anon) 공개용 키**를 복사해 `config.js` 두 줄에 넣기
+   - secret · service_role 키는 절대 넣지 않습니다.
+
 ## 여는 법
-- 내 PC (전체 기능) : VS Code에서 `index.html` 오른쪽 클릭 → "Open with Live Server"
-  - 확장이 없으면 VS Code 확장(Extensions)에서 "Live Server" 설치
-- 내 PC (더블클릭) : 화면은 열리지만 `data/tasks.json` 을 못 읽어 기본 일정 6건 대신 '배포 주소로 열어 주세요'가 보임 (화면에서 추가한 일정 · 날씨 · md 저장은 됨)
+- 내 PC : `index.html` 더블클릭 (일정은 Supabase 에서 읽음)
+  - `config.js` 가 비어 있거나 인터넷이 안 되면 표에 '일정을 불러오지 못했습니다 (config.js 확인)'가 보임
 - 인터넷 : (배포 후 Vercel 주소를 여기에 적기)
 
 ## 오늘 판단 md 저장
@@ -28,6 +33,8 @@
 | style.css | 디자인 |
 | logic.js | 판단 규칙 |
 | app.js | 화면 동작 |
+| config.js | Supabase 주소 · 공개용 키 (두 줄) |
+| setup.sql | Supabase 표 만들기 (SQL Editor 에서 실행) |
 | data/tasks.json | 기본 일정 (가상 데이터) |
 | PRD.md | 무엇을 · 왜 만드는지 |
 | CLAUDE.md | AI가 지킬 작업 규칙 |

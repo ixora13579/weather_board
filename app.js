@@ -1,33 +1,42 @@
 // app.js – 화면 동작 (목록 그리기, 일정 추가)
 
-// 04 단원 : 기본 일정은 data/tasks.json (가상 데이터), 화면에서 추가한 일정만 브라우저(wx_added)에 저장
+// 04 단원 : 일정은 Supabase 표 wx_tasks 에서 읽고, 추가도 거기에 저장 (연결 정보는 config.js)
 let tasks = [];
-let jsonFailed = false;     // 더블클릭(file://)으로 열면 JSON을 못 읽음
+let loadFailed = false;     // Supabase 연결 실패 (config.js 비어 있음 · 인터넷 끊김 등)
 let weatherByRegion = {};   // 03 단원에서 지역별 날씨를 넣음
 
+let db = null;
+try {
+  db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+} catch (err) {
+  console.error('Supabase 연결 준비 실패', err);
+}
+
 async function loadTasks() {
-  let base = [];
   try {
-    const res = await fetch('data/tasks.json');
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    base = await res.json();
-    jsonFailed = false;
+    if (!db) throw new Error('config.js 비어 있음');
+    const { data, error } = await db.from('wx_tasks')
+      .select('title, region, kind, owner')
+      .order('id');
+    if (error) throw error;
+    tasks = data;
+    loadFailed = false;
   } catch (err) {
-    jsonFailed = true;
+    console.error('일정 불러오기 실패', err);
+    tasks = [];
+    loadFailed = true;
   }
-  const saved = JSON.parse(localStorage.getItem('wx_added') || '[]');
-  tasks = base.concat(saved);
 }
 
 function renderTasks() {
   const body = document.getElementById('taskList');
   body.innerHTML = '';
-  if (jsonFailed) {
+  if (loadFailed) {
     const tr = document.createElement('tr');
     const td = document.createElement('td');
     td.colSpan = 6;
     td.className = 'stop';
-    td.textContent = '일정 파일(data/tasks.json)을 읽지 못했습니다. 배포 주소로 열어 주세요.';
+    td.textContent = '일정을 불러오지 못했습니다 (config.js 확인)';
     tr.appendChild(td);
     body.appendChild(tr);
   }
@@ -48,8 +57,10 @@ function renderTasks() {
   }
 }
 
-function addTask(e) {
+async function addTask(e) {
   e.preventDefault();
+  const form = e.target;
+  const msg = document.getElementById('msgBox');
   const t = {
     title: document.getElementById('titleInput').value.trim(),
     region: document.getElementById('regionInput').value,
@@ -57,11 +68,17 @@ function addTask(e) {
     owner: document.getElementById('ownerInput').value.trim(),
   };
   if (!t.title || !t.owner) return;
-  const saved = JSON.parse(localStorage.getItem('wx_added') || '[]');
-  saved.push(t);
-  localStorage.setItem('wx_added', JSON.stringify(saved));
-  e.target.reset();
-  tasks.push(t);
+  msg.textContent = '';
+  try {
+    if (!db) throw new Error('config.js 비어 있음');
+    const { error } = await db.from('wx_tasks').insert(t);
+    if (error) throw error;
+  } catch (err) {
+    msg.textContent = '저장하지 못했습니다 (' + err.message + ')';
+    return;
+  }
+  form.reset();
+  await loadTasks();
   renderTasks();
 }
 
