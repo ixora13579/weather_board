@@ -67,7 +67,29 @@ function showToday() {
     d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
 }
 
+// 03 단원 : Open-Meteo 에서 지역별 오늘 날씨를 받아 표를 다시 그림 (실패해도 목록은 그대로)
+async function loadWeather() {
+  const box = document.getElementById('weatherBox');
+  box.textContent = '날씨 받는 중…';
+  try {
+    const res = await fetch(buildWeatherUrl());
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    weatherByRegion = parseWeather(await res.json());
+    let msg = 'Open-Meteo 오늘 날씨 (' + new Date().toLocaleTimeString('ko-KR') + ' 기준)';
+    // ?test=wind : 모든 지역 풍속을 12 m/s 로 바꿔 R-02 시험
+    if (new URLSearchParams(location.search).get('test') === 'wind') {
+      for (const r in weatherByRegion) weatherByRegion[r].windMax = 12;
+      msg += ' · 시험 모드: 풍속 12m/s';
+    }
+    box.textContent = msg;
+    renderTasks();
+  } catch (err) {
+    box.textContent = '날씨를 받지 못했습니다 (' + err.message + ')';
+  }
+}
+
 document.getElementById('taskForm').addEventListener('submit', addTask);
 showToday();
 loadTasks();
 renderTasks();
+loadWeather();
